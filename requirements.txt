@@ -1,0 +1,18 @@
+# 抖音视频文案提取工具依赖
+
+# 核心依赖
+requests>=2.28.0
+curl_cffi>=0.5.0
+
+# 视频下载
+yt-dlp>=2024.1.0
+
+# 音频提取
+moviepy>=2.0.0
+imageio-ffmpeg>=0.4.0
+
+# 语音识别（Whisper）
+openai-whisper>=20231117
+
+# 可选依赖（最后的降级方案）
+# playwright>=1.40.0

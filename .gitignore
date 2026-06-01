@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Output files (user-generated content)
+output/
+
+# Cookies (may contain sensitive data)
+cookies.txt
+
+# Temporary media files
+*.mp4
+*.wav
+*.mp3
+
+# Whisper model cache
+.whisper/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
