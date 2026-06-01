@@ -8,6 +8,24 @@ user-invocable: true
 
 从抖音视频中提取**语音内容**（说话人讲了什么），并进行智能整理。
 
+## 安装
+
+### 方式一：让 Claude Code 自动安装
+
+在 Claude Code 中输入：
+
+```
+帮我从这个 GitHub 仓库安装 skill：https://github.com/YOUR_USERNAME/douyin-text
+```
+
+### 方式二：手动安装
+
+```bash
+git clone https://github.com/YOUR_USERNAME/douyin-text.git ~/.claude/skills/douyin-text
+cd ~/.claude/skills/douyin-text
+pip install -r requirements.txt
+```
+
 ## 使用方法
 
 ```
@@ -70,10 +88,6 @@ user-invocable: true
 | ≤ 1000 字 | 完整显示全部内容 | 保存完整版 |
 | > 1000 字 | 原始转录前 3 段 + 整理文案前 300 字 + 核心观点完整 | 保存完整版 |
 
-## 执行要求
-
-运行此 skill 后，直接展示脚本的完整输出，不要额外添加摘要总结。
-
 ## 故障排除
 
 | 错误信息 | 原因 | 解决方案 |
@@ -81,6 +95,7 @@ user-invocable: true
 | whisper 未安装 | 缺少依赖 | `pip install openai-whisper` |
 | moviepy 未安装 | 缺少依赖 | `pip install moviepy` |
 | 视频下载失败 | 反爬限制 | 确保浏览器已登录抖音 |
+| 找不到 ffmpeg | 系统依赖缺失 | macOS: `brew install ffmpeg`，Linux: `sudo apt install ffmpeg` |
 
 ## 注意事项
 
