@@ -103,6 +103,20 @@ REPEAT_PATTERNS = [
     r"(\w{2,})\1{1,}",  # 连续重复的词语
 ]
 
+# 高置信度 ASR 误识别修正规则（只做短语级替换，避免过度纠错）
+ASR_CORRECTIONS = [
+    ("苏氏因被扁黄周", "苏轼因被贬黄州"),
+    ("元风五年", "元丰五年"),
+    ("被扁黄周", "被贬黄州"),
+    ("从小喜欢装子", "从小喜欢庄子"),
+    ("人生到处知何思", "人生到处知何似"),
+    ("硬似飞红踏雪泥", "应似飞鸿踏雪泥"),
+    ("泥上偶然流直转", "泥上偶然留指爪"),
+    ("红飞哪腹寄东西", "鸿飞那复计东西"),
+    ("回首向来消瘦处", "回首向来萧瑟处"),
+    ("规去也无风雨也无情", "归去，也无风雨也无晴"),
+]
+
 
 class DouyinExtractor:
     """抖音文案提取器"""
@@ -691,7 +705,9 @@ class DouyinExtractor:
         result["transcription_raw"] = transcription
 
         # 步骤 5: 文案整理
-        result["transcription_cleaned"] = self.clean_text(transcription)
+        cleaned_text = self.clean_text(transcription)
+        processed_text = TextProcessor.process(cleaned_text)
+        result["transcription_cleaned"] = processed_text["cleaned"]
 
         return result
 
@@ -1113,6 +1129,18 @@ class TextProcessor:
     """文案处理器"""
 
     @staticmethod
+    def correct_obvious_asr_errors(text: str) -> str:
+        """修正常见且高置信度的 ASR 误识别短语"""
+        if not text:
+            return ""
+
+        result = text
+        for source, target in ASR_CORRECTIONS:
+            result = result.replace(source, target)
+
+        return result
+
+    @staticmethod
     def remove_filler_words(text: str) -> str:
         """移除语气词和填充词"""
         if not text:
@@ -1218,26 +1246,29 @@ class TextProcessor:
     @staticmethod
     def process(text: str) -> dict:
         """完整处理流程"""
-        # 1. 移除语气词
-        step1 = TextProcessor.remove_filler_words(text)
+        # 1. 修正常见 ASR 误识别
+        step1 = TextProcessor.correct_obvious_asr_errors(text)
 
-        # 2. 移除重复词
-        step2 = TextProcessor.remove_repeats(step1)
+        # 2. 移除语气词
+        step2 = TextProcessor.remove_filler_words(step1)
 
-        # 3. 优化断句
-        step3 = TextProcessor.optimize_sentences(step2)
+        # 3. 移除重复词
+        step3 = TextProcessor.remove_repeats(step2)
 
-        # 4. 提取核心观点
-        key_points = TextProcessor.extract_key_points(step3)
+        # 4. 优化断句
+        step4 = TextProcessor.optimize_sentences(step3)
 
-        # 5. 加粗核心观点
-        step4 = TextProcessor.bold_key_points(step3, key_points)
+        # 5. 提取核心观点
+        key_points = TextProcessor.extract_key_points(step4)
+
+        # 6. 加粗核心观点
+        formatted = TextProcessor.bold_key_points(step4, key_points)
 
         return {
             "original": text,
-            "cleaned": step3,
+            "cleaned": step4,
             "key_points": key_points,
-            "formatted": step4,
+            "formatted": formatted,
         }
 
 
@@ -1593,6 +1624,11 @@ def main():
         action="store_true",
         help="更新 yt-dlp 到最新版本后退出",
     )
+    parser.add_argument(
+        "--raw-json",
+        action="store_true",
+        help="只输出原始转录的 JSON 数据（url, author, description, transcription_raw, error），不生成 Markdown 文件。供 Claude Code Skill 使用。",
+    )
 
     args = parser.parse_args()
 
@@ -1629,6 +1665,33 @@ def main():
         print("正在提取视频描述...", file=sys.stderr)
         result = extract_douyin_text(url, cookies_browser, cookies_file)
         print(result)
+    elif args.raw_json:
+        # Claude Code Skill 模式：只输出原始转录的 JSON，不生成 Markdown
+        # Claude 会基于此 JSON 一次性生成最终 Markdown 文档
+        print("正在提取视频原始转录（raw-json 模式）...", file=sys.stderr)
+        result = extract_douyin_transcription(url, cookies_browser, cookies_file, args.whisper_model)
+
+        # 错误处理：result 是字符串说明出错
+        if isinstance(result, str) and result.startswith("❌"):
+            payload = {
+                "url": url,
+                "author": "",
+                "description": "",
+                "transcription_raw": "",
+                "error": result.lstrip("❌ ").strip(),
+            }
+        else:
+            # result 是 dict，提取原始字段，不包含任何 Markdown 或整理后文本
+            payload = {
+                "url": result.get("url", url),
+                "author": result.get("author", ""),
+                "description": result.get("description", ""),
+                "transcription_raw": result.get("transcription_raw", ""),
+                "error": result.get("error"),
+            }
+
+        # 输出纯 JSON 到 stdout（Claude 解析用），不写文件
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
         # 默认：提取视频语音文案（下载视频 → Whisper 转录）
         print("正在提取视频语音文案...", file=sys.stderr)

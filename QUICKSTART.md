@@ -39,6 +39,13 @@ pip install -r requirements.txt
 /douyin-text https://v.douyin.com/xxxxx
 ```
 
+Skill 会自动按以下 4 步执行：
+
+1. Python 提取原始转录（`extract.py --raw-json`）
+2. Claude 读取 JSON 原始数据
+3. Claude 动态校对、自然分段、提炼核心观点
+4. Claude 一次性生成最终 Markdown 文件，保存到 `output/`
+
 ## 首次使用
 
 首次运行会下载 Whisper small 模型（~461MB），之后自动缓存。
@@ -71,4 +78,7 @@ pip install -r requirements.txt
 
 ### Q: 转录有错误？
 
-用更大模型：`--whisper-model medium`
+两个层面可以改善：
+
+- ASR 层面（Whisper 听错）：换更大模型，如 `--whisper-model medium`
+- 文本层面：Skill 模式下 Claude 会自动做动态校对，比旧版规则匹配更准
