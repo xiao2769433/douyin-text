@@ -27,7 +27,7 @@ Claude Code 会自动克隆仓库、安装依赖、配置 skill。
 
 ```bash
 # 1. 克隆仓库到 Claude Code 的 skills 目录
-git clone https://github.com/YOUR_USERNAME/douyin-text.git ~/.claude/skills/douyin-text
+git clone https://github.com/xiao2769433/douyin-text.git ~/.claude/skills/douyin-text
 
 # 2. 安装 Python 依赖
 cd ~/.claude/skills/douyin-text
