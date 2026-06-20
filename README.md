@@ -18,7 +18,7 @@
 在 Claude Code 中输入：
 
 ```
-帮我从这个 GitHub 仓库安装 skill：https://github.com/YOUR_USERNAME/douyin-text
+帮我从这个 GitHub 仓库安装 skill：https://github.com/xiao2769433/douyin-text
 ```
 
 Claude Code 会自动克隆仓库、安装依赖、配置 skill。
